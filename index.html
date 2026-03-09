@@ -649,12 +649,11 @@
     comparison: 'before and after ceiling renovation transformation post'
   };
 
-  // ── PRIVATE CONFIG (hardcoded) ──
+  // ── CONFIG ──
   const OWNER_ID = 220218956;
-  const API_KEY = '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';
-  const DEFAULT_MODEL = 'openai/gpt-4o-mini';
-  const DEFAULT_LANG = 'ukrainian';
-  const DEFAULT_CITY = 'Киев и область';
+  // API key is stored securely on the server (Railway env vars)
+  // Server URL — will be set after Railway deploy
+  const SERVER_URL = 'https://stelioinstapostgeneratorbot-production.up.railway.app';
 
   // ── INIT ──
   window.onload = () => {
@@ -674,7 +673,7 @@
       return;
     }
 
-    if (userId === OWNER_ID) {
+    if (Number(userId) === Number(OWNER_ID)) {
       status.textContent = 'Добро пожаловать, Олег! ✅';
       dot.classList.add('active');
     } else {
@@ -744,12 +743,9 @@
   async function generate() {
     hideError();
 
-    const apiKey = API_KEY;
-    if (!apiKey || apiKey === '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') { showError('API ключ не настроен'); return; }
-
     // Check TG access
     const userId = tg?.initDataUnsafe?.user?.id;
-    if (tg && userId && userId !== OWNER_ID) { showError('Нет доступа'); return; }
+    if (tg && userId && Number(userId) !== Number(OWNER_ID)) { showError('Нет доступа'); return; }
 
     const desc = document.getElementById('postDesc').value.trim();
     if (!desc) { showError('Опиши что показать в посте'); return; }
@@ -763,9 +759,7 @@
     document.getElementById('igCaption').textContent = '';
     document.getElementById('igTags').textContent = '';
 
-    const model = DEFAULT_MODEL;
-    const lang = DEFAULT_LANG;
-    const city = DEFAULT_CITY;
+    const lang = 'ukrainian';
     const imgStyle = document.getElementById('imgStyle').value;
     const postType = typePrompts[selectedType];
 
@@ -782,36 +776,15 @@ Description: "${desc}"
 Write an engaging Instagram post in ${langName} language. Respond ONLY with valid JSON object, no markdown, no extra text:
 {"caption":"3-4 sentences, friendly tone, 1-2 emojis, end with call to action","hashtags":"25 relevant hashtags space-separated, mix local and English tags","image_prompt":"detailed English DALL-E 3 prompt, style: ${imgStyle}, square 1:1, photorealistic, NO text, NO watermarks, NO logos"}`;
 
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const res = // Send to our Railway server (API key is safe there)
+      const res = await fetch(SERVER_URL + '/api/generate-text', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://stelio.com.ua',
-          'X-Title': 'STELIO TMA'
-        },
-        body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], max_tokens: 900 })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ desc, postType, imgStyle, lang, userId: String(OWNER_ID) })
       });
 
-      const resText = await res.text();
-
-      if (!res.ok) {
-        let errMsg = `Ошибка ${res.status}`;
-        try { errMsg = JSON.parse(resText).error?.message || errMsg; } catch {}
-        throw new Error(errMsg);
-      }
-
-      let data;
-      try { data = JSON.parse(resText); } catch { throw new Error('Некорректный ответ: ' + resText.slice(0, 150)); }
-
-      let raw = data.choices?.[0]?.message?.content || '';
-      if (!raw) throw new Error('Модель не вернула текст. Попробуй ещё раз.');
-
-      raw = raw.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim();
-      const match = raw.match(/\{[\s\S]*\}/);
-      if (!match) throw new Error('Модель не вернула JSON. Попробуй другую модель в настройках.');
-
-      const parsed = JSON.parse(match[0]);
+      const parsed = await res.json();
+      if (!res.ok || parsed.error) throw new Error(parsed.error || 'Ошибка сервера');
       captionText = parsed.caption || '';
       tagsText = parsed.hashtags || '';
 
@@ -822,25 +795,25 @@ Write an engaging Instagram post in ${langName} language. Respond ONLY with vali
       // ── IMAGE ──
       const imgPrompt = parsed.image_prompt || `${desc}, ${imgStyle}`;
 
-      // Generate image via pollinations.ai (free, no key needed)
-      const encodedPrompt = encodeURIComponent(imgPrompt);
-      const seed = Math.floor(Math.random() * 999999);
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${seed}&model=flux&nologo=true`;
-
-      // Preload image
-      await new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = imageUrl;
-        setTimeout(resolve, 15000); // timeout 15s
+      // Get image URL from server
+      const imgRes = await fetch(SERVER_URL + '/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imagePrompt: imgPrompt, userId: String(OWNER_ID) })
       });
+      const imgData = await imgRes.json();
+      const imageUrl = imgData.imageUrl;
+
+      if (!imageUrl) throw new Error('Не удалось получить URL изображения');
 
       currentImageUrl = imageUrl;
-      document.getElementById('igImg').innerHTML = `<img src="${imageUrl}" alt="post" />`;
-      saveHistory(imageUrl, captionText);
-      showToast('✅ Готово к публикации!');
-      if (tg) tg.HapticFeedback?.notificationOccurred('success');
+      document.getElementById('igImg').innerHTML = `<img src="${imageUrl}" alt="post" onload="this.style.opacity=1" style="opacity:0;transition:opacity 0.5s" />`;
+      // Wait for image to load
+      setTimeout(() => {
+        saveHistory(imageUrl, captionText);
+        showToast('✅ Готово к публикации!');
+        if (tg) tg.HapticFeedback?.notificationOccurred('success');
+      }, 1000);
 
     } catch (e) {
       showError(e.message);
