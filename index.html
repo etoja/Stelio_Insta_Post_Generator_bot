@@ -628,19 +628,19 @@
 
 <script>
   // Init Telegram Mini App
-  const tg = window.Telegram?.WebApp;
+  var tg = window.Telegram?.WebApp;
   if (tg) {
     tg.ready();
     tg.expand();
     tg.enableClosingConfirmation();
   }
 
-  let selectedType = 'service';
-  let currentImageUrl = '';
-  let captionText = '';
-  let tagsText = '';
+  var selectedType = 'service';
+  var currentImageUrl = '';
+  var captionText = '';
+  var tagsText = '';
 
-  const typePrompts = {
+  var typePrompts = {
     service: 'professional ceiling installation service post for Instagram',
     review: 'customer review / testimonial post about stretch ceiling installation',
     overview: 'completed project showcase / overview of stretch ceiling installation',
@@ -650,10 +650,10 @@
   };
 
   // ── CONFIG ──
-  const OWNER_ID = 220218956;
+  var OWNER_ID = 220218956;
   // API key is stored securely on the server (Railway env vars)
   // Server URL — will be set after Railway deploy
-  const SERVER_URL = 'https://stelioinstapostgeneratorbot-production.up.railway.app';
+  var SERVER_URL = 'https://stelioinstapostgeneratorbot-production.up.railway.app';
 
   // ── INIT ──
   window.onload = () => {
@@ -663,14 +663,11 @@
   };
 
   function checkAccess() {
-    const dot = document.getElementById('keyDot');
-    const status = document.getElementById('accessStatus');
-
-    // Try to get user from Telegram
-    const userId = tg?.initDataUnsafe?.user?.id;
+    var dot = document.getElementById('keyDot');
+    var status = document.getElementById('accessStatus');
+    var userId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
 
     if (userId && Number(userId) !== Number(OWNER_ID)) {
-      // Someone else's Telegram account
       status.textContent = '⛔ Нет доступа';
       dot.style.background = '#EF4444';
       document.getElementById('generateBtn').disabled = true;
@@ -678,12 +675,7 @@
       return;
     }
 
-    // Either our user or browser/unknown - allow access
-    if (userId && Number(userId) === Number(OWNER_ID)) {
-      status.textContent = 'Добро пожаловать, Олег! ✅';
-    } else {
-      status.textContent = 'STELIO Bot ✅';
-    }
+    status.textContent = userId ? 'Добро пожаловать, Олег! ✅' : 'STELIO Bot ✅';
     dot.classList.add('active');
   }
 
@@ -713,7 +705,7 @@
     el.classList.add('active');
     selectedType = el.dataset.type;
 
-    const hints = {
+    var hints = {
       service: 'Напр: матовый белый потолок со споттами, спальня 18 кв.м',
       overview: 'Напр: ЖК Осокор, 3-комнатная, тканевый потолок с LED подсветкой',
       promotion: 'Напр: акция -20% на монтаж, бесплатный замер до конца месяца',
@@ -726,7 +718,7 @@
 
   // ── ERROR ──
   function showError(msg) {
-    const el = document.getElementById('errorBox');
+    var el = document.getElementById('errorBox');
     el.textContent = '⚠️ ' + msg;
     el.classList.add('show');
     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -735,7 +727,7 @@
 
   // ── TOAST ──
   function showToast(msg) {
-    const t = document.getElementById('toast');
+    var t = document.getElementById('toast');
     t.textContent = msg;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2500);
@@ -746,13 +738,13 @@
     hideError();
 
     // Check TG access
-    const userId = tg?.initDataUnsafe?.user?.id;
+    var userId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
     if (tg && userId && Number(userId) !== Number(OWNER_ID)) { showError('Нет доступа'); return; }
 
-    const desc = document.getElementById('postDesc').value.trim();
+    var desc = document.getElementById('postDesc').value.trim();
     if (!desc) { showError('Опиши что показать в посте'); return; }
 
-    const btn = document.getElementById('generateBtn');
+    var btn = document.getElementById('generateBtn');
     btn.disabled = true;
     btn.innerHTML = '<div class="spinner"></div> Генерирую...';
 
@@ -761,16 +753,16 @@
     document.getElementById('igCaption').textContent = '';
     document.getElementById('igTags').textContent = '';
 
-    const lang = 'ukrainian';
-    const imgStyle = document.getElementById('imgStyle').value;
-    const postType = typePrompts[selectedType];
+    var lang = 'ukrainian';
+    var imgStyle = document.getElementById('imgStyle').value;
+    var postType = typePrompts[selectedType];
 
-    const langMap = { ukrainian: 'Ukrainian', russian: 'Russian', english: 'English' };
-    const langName = langMap[lang] || 'Ukrainian';
+    var langMap = { ukrainian: 'Ukrainian', russian: 'Russian', english: 'English' };
+    var langName = langMap[lang] || 'Ukrainian';
 
     try {
       // ── TEXT ──
-      const prompt = `You are an Instagram content manager for STELIO — professional stretch ceiling installation company in ${city}, Ukraine.
+      var prompt = `You are an Instagram content manager for STELIO — professional stretch ceiling installation company in ${city}, Ukraine.
 
 Post type: ${postType}
 Description: "${desc}"
@@ -778,14 +770,14 @@ Description: "${desc}"
 Write an engaging Instagram post in ${langName} language. Respond ONLY with valid JSON object, no markdown, no extra text:
 {"caption":"3-4 sentences, friendly tone, 1-2 emojis, end with call to action","hashtags":"25 relevant hashtags space-separated, mix local and English tags","image_prompt":"detailed English DALL-E 3 prompt, style: ${imgStyle}, square 1:1, photorealistic, NO text, NO watermarks, NO logos"}`;
 
-      const res = // Send to our Railway server (API key is safe there)
-      const res = await fetch(SERVER_URL + '/api/generate-text', {
+      var res = // Send to our Railway server (API key is safe there)
+      var res = await fetch(SERVER_URL + '/api/generate-text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ desc, postType, imgStyle, lang, userId: String(OWNER_ID) })
       });
 
-      const parsed = await res.json();
+      var parsed = await res.json();
       if (!res.ok || parsed.error) throw new Error(parsed.error || 'Ошибка сервера');
       captionText = parsed.caption || '';
       tagsText = parsed.hashtags || '';
@@ -795,16 +787,16 @@ Write an engaging Instagram post in ${langName} language. Respond ONLY with vali
       document.getElementById('igLoc').textContent = city;
 
       // ── IMAGE ──
-      const imgPrompt = parsed.image_prompt || `${desc}, ${imgStyle}`;
+      var imgPrompt = parsed.image_prompt || `${desc}, ${imgStyle}`;
 
       // Get image URL from server
-      const imgRes = await fetch(SERVER_URL + '/api/generate-image', {
+      var imgRes = await fetch(SERVER_URL + '/api/generate-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imagePrompt: imgPrompt, userId: String(OWNER_ID) })
       });
-      const imgData = await imgRes.json();
-      const imageUrl = imgData.imageUrl;
+      var imgData = await imgRes.json();
+      var imageUrl = imgData.imageUrl;
 
       if (!imageUrl) throw new Error('Не удалось получить URL изображения');
 
@@ -830,7 +822,7 @@ Write an engaging Instagram post in ${langName} language. Respond ONLY with vali
 
   // ── COPY ──
   function copyText(type) {
-    let text = '';
+    var text = '';
     if (type === 'caption') text = captionText;
     else if (type === 'tags') text = tagsText;
     else text = captionText + '\n\n' + tagsText;
@@ -840,7 +832,7 @@ Write an engaging Instagram post in ${langName} language. Respond ONLY with vali
       if (tg) tg.HapticFeedback?.impactOccurred('light');
     }).catch(() => {
       // Fallback for older browsers
-      const ta = document.createElement('textarea');
+      var ta = document.createElement('textarea');
       ta.value = text;
       document.body.appendChild(ta);
       ta.select();
@@ -857,7 +849,7 @@ Write an engaging Instagram post in ${langName} language. Respond ONLY with vali
 
   // ── HISTORY ──
   function saveHistory(url, caption) {
-    const h = JSON.parse(localStorage.getItem('stelio_history') || '[]');
+    var h = JSON.parse(localStorage.getItem('stelio_history') || '[]');
     h.unshift({ url, caption, date: Date.now() });
     if (h.length > 8) h.pop();
     localStorage.setItem('stelio_history', JSON.stringify(h));
@@ -865,8 +857,8 @@ Write an engaging Instagram post in ${langName} language. Respond ONLY with vali
   }
 
   function loadHistory() {
-    const h = JSON.parse(localStorage.getItem('stelio_history') || '[]');
-    const grid = document.getElementById('historyGrid');
+    var h = JSON.parse(localStorage.getItem('stelio_history') || '[]');
+    var grid = document.getElementById('historyGrid');
     if (!h.length) return;
     grid.innerHTML = h.map(i => `
       <div class="h-thumb" onclick="previewHistory('${i.url}')">
@@ -877,6 +869,18 @@ Write an engaging Instagram post in ${langName} language. Respond ONLY with vali
   function previewHistory(url) {
     window.open(url, '_blank');
   }
+
+  // Expose all functions globally for onclick handlers
+  window.selectType = selectType;
+  window.selectStyle = selectStyle;
+  window.generate = generate;
+  window.copyText = copyText;
+  window.openImage = openImage;
+  window.openSettings = openSettings;
+  window.closeSettings = closeSettings;
+  window.closeSettingsOutside = closeSettingsOutside;
+  window.saveSettings = saveSettings;
+  window.previewHistory = previewHistory;
 </script>
 </body>
 </html>
