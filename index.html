@@ -50,15 +50,14 @@
     .input-group { margin-bottom: 14px; }
 
     /* Photo upload zone */
-    .photo-upload { border: 2px dashed var(--border); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; background: #F8FAFF; }
+    .photo-upload { border: 2px dashed var(--border); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: #F8FAFF; }
     .photo-upload:active { border-color: var(--blue); background: #EEF4FF; }
-    .photo-upload input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
     .photo-upload-icon { font-size: 32px; margin-bottom: 8px; }
     .photo-upload-text { font-size: 13px; font-weight: 600; color: var(--blue); }
     .photo-upload-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
     .photo-preview { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; display: none; }
     .photo-preview.show { display: block; }
-    .photo-change { margin-top: 8px; font-size: 12px; color: var(--blue); text-align: center; cursor: pointer; }
+    .photo-change { margin-top: 8px; font-size: 12px; color: var(--red); text-align: center; cursor: pointer; font-weight: 600; }
 
     .btn-generate { width: 100%; padding: 15px; background: var(--blue); color: #fff; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 800; letter-spacing: 1px; border: none; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
     .btn-generate:active { background: var(--blue-dark); transform: scale(0.98); }
@@ -136,16 +135,17 @@
 <div class="section" style="margin-top:16px">
   <div class="section-title">Фото</div>
   <div class="card">
-    <div class="photo-upload" id="photoUploadZone">
-      <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoUpload(event)"/>
-      <div id="uploadPlaceholder">
-        <div class="photo-upload-icon">📸</div>
-        <div class="photo-upload-text">Загрузи своё фото</div>
-        <div class="photo-upload-sub">Геометрия Stelio наложится поверх</div>
-      </div>
-      <img id="photoPreview" class="photo-preview" alt="preview"/>
+    <!-- hidden file input -->
+    <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)"/>
+    <!-- upload tap zone (shown when no photo) -->
+    <div class="photo-upload" id="photoUploadZone" onclick="document.getElementById('photoInput').click()">
+      <div class="photo-upload-icon">📸</div>
+      <div class="photo-upload-text">Натисни та завантаж фото</div>
+      <div class="photo-upload-sub">Геометрія Stelio накладеться зверху</div>
     </div>
-    <div class="photo-change" id="photoChange" style="display:none" onclick="resetPhoto()">✕ Удалить фото</div>
+    <!-- preview (shown after upload) -->
+    <img id="photoPreview" class="photo-preview" alt="preview"/>
+    <div class="photo-change" id="photoChange" style="display:none" onclick="resetPhoto()">✕ Видалити фото</div>
   </div>
 </div>
 
@@ -269,24 +269,20 @@
       var preview = document.getElementById('photoPreview');
       preview.src = uploadedPhotoDataUrl;
       preview.classList.add('show');
-      document.getElementById('uploadPlaceholder').style.display = 'none';
+      document.getElementById('photoUploadZone').style.display = 'none';
       document.getElementById('photoChange').style.display = 'block';
-      // disable file input click area since preview is shown
-      document.getElementById('photoUploadZone').style.cursor = 'default';
-      document.getElementById('photoInput').style.pointerEvents = 'none';
     };
     reader.readAsDataURL(file);
   }
 
   function resetPhoto() {
     uploadedPhotoDataUrl = null;
-    document.getElementById('photoPreview').classList.remove('show');
-    document.getElementById('photoPreview').src = '';
-    document.getElementById('uploadPlaceholder').style.display = 'block';
+    var preview = document.getElementById('photoPreview');
+    preview.classList.remove('show');
+    preview.src = '';
+    document.getElementById('photoUploadZone').style.display = 'block';
     document.getElementById('photoChange').style.display = 'none';
     document.getElementById('photoInput').value = '';
-    document.getElementById('photoUploadZone').style.cursor = 'pointer';
-    document.getElementById('photoInput').style.pointerEvents = 'auto';
   }
 
   // ── TYPE SELECT ──
