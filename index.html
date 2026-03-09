@@ -762,7 +762,7 @@
 
     try {
       // ── TEXT ──
-      var prompt = `You are an Instagram content manager for STELIO — professional stretch ceiling installation company in ${city}, Ukraine.
+      var prompt = `You are an Instagram content manager for STELIO — professional stretch ceiling installation company in Киев и область, Ukraine.
 
 Post type: ${postType}
 Description: "${desc}"
@@ -770,7 +770,6 @@ Description: "${desc}"
 Write an engaging Instagram post in ${langName} language. Respond ONLY with valid JSON object, no markdown, no extra text:
 {"caption":"3-4 sentences, friendly tone, 1-2 emojis, end with call to action","hashtags":"25 relevant hashtags space-separated, mix local and English tags","image_prompt":"detailed English DALL-E 3 prompt, style: ${imgStyle}, square 1:1, photorealistic, NO text, NO watermarks, NO logos"}`;
 
-      var res = // Send to our Railway server (API key is safe there)
       var res = await fetch(SERVER_URL + '/api/generate-text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -784,7 +783,7 @@ Write an engaging Instagram post in ${langName} language. Respond ONLY with vali
 
       document.getElementById('igCaption').textContent = captionText;
       document.getElementById('igTags').textContent = tagsText;
-      document.getElementById('igLoc').textContent = city;
+      document.getElementById('igLoc').textContent = 'Киев, Украина';
 
       // ── IMAGE ──
       var imgPrompt = parsed.image_prompt || `${desc}, ${imgStyle}`;
@@ -872,7 +871,6 @@ Write an engaging Instagram post in ${langName} language. Respond ONLY with vali
 
   // Expose all functions globally for onclick handlers
   window.selectType = selectType;
-  window.selectStyle = selectStyle;
   window.generate = generate;
   window.copyText = copyText;
   window.openImage = openImage;
