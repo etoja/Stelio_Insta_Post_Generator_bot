@@ -14,6 +14,12 @@ const CITY = process.env.CITY || 'Киев и область';
 app.use(cors());
 app.use(express.json());
 
+// Fix CSP headers that block inline JS
+app.use((req, res, next) => {
+  res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;");
+  next();
+});
+
 // Serve frontend — check both root and public/ folder
 const publicDir = require('fs').existsSync(path.join(__dirname, 'public'))
   ? path.join(__dirname, 'public')
