@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>STELIO — Instagram Bot</title>
+  <!-- Telegram Mini App SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue: #1E6FE8;
+      --blue-dark: #0F4FB5;
+      --blue-light: #5B9BF5;
+      --bg: #F2F5FB;
+      --card: #FFFFFF;
+      --text: #111827;
+      --muted: #6B7280;
+      --border: #E5EAFA;
+      --green: #22C55E;
+      --red: #EF4444;
+    }
+
+    /* Use Telegram theme colors if available */
+    body {
+      background: var(--tg-theme-bg-color, var(--bg));
+      color: var(--tg-theme-text-color, var(--text));
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 30px;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: #0A1628;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .logo {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 2px;
+    }
+
+    .logo span { color: var(--blue-light); }
+
+    .header-sub {
+      font-size: 11px;
+      color: #6B7A99;
+      letter-spacing: 0.5px;
+    }
+
+    .header-badge {
+      margin-left: auto;
+      background: var(--blue);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+    }
+
+    /* ── SECTIONS ── */
+    .section {
+      padding: 0 12px;
+      margin-top: 12px;
+    }
+
+    .section-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--blue);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      padding: 0 4px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 16px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── SETUP CARD ── */
+    .setup-card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .setup-card:active { opacity: 0.7; }
+
+    .setup-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #EEF4FF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .setup-info { flex: 1; min-width: 0; }
+    .setup-label { font-size: 13px; font-weight: 600; color: var(--text); }
+    .setup-value { font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .setup-arrow { color: var(--muted); font-size: 16px; }
+    .setup-dot { width: 8px; height: 8px; border-radius: 50%; background: #D1D5DB; flex-shrink: 0; }
+    .setup-dot.active { background: var(--green); }
+
+    /* ── TYPE GRID ── */
+    .type-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .type-btn {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 4px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .type-btn:active { transform: scale(0.95); }
+    .type-btn.active { border-color: var(--blue); background: var(--blue); }
+    .type-btn.active .type-label { color: #fff; }
+
+    .type-icon { font-size: 20px; margin-bottom: 4px; }
+    .type-label { font-size: 11px; font-weight: 600; color: var(--muted); line-height: 1.2; }
+
+    /* ── INPUTS ── */
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    textarea, select, input[type="text"], input[type="password"] {
+      width: 100%;
+      background: #F8FAFF;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      padding: 11px 13px;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+
+    textarea:focus, select:focus, input:focus { border-color: var(--blue); background: #fff; }
+    textarea { resize: none; min-height: 80px; }
+    select { cursor: pointer; }
+
+    .input-group { margin-bottom: 14px; }
+
+    /* ── GENERATE BUTTON ── */
+    .btn-generate {
+      width: 100%;
+      padding: 15px;
+      background: var(--blue);
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-generate:active { background: var(--blue-dark); transform: scale(0.98); }
+    .btn-generate:disabled { opacity: 0.5; }
+
+    /* ── ERROR ── */
+    .error-box {
+      background: #FFF5F5;
+      border: 1px solid #FED7D7;
+      border-radius: 10px;
+      color: var(--red);
+      font-size: 13px;
+      padding: 11px 13px;
+      margin-bottom: 12px;
+      display: none;
+      line-height: 1.5;
+    }
+    .error-box.show { display: block; }
+
+    /* ── RESULT ── */
+    .result-section { display: none; }
+    .result-section.show { display: block; }
+
+    /* Instagram-style preview */
+    .ig-preview {
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid #E5EAFA;
+      overflow: hidden;
+      box-shadow: 0 2px 16px rgba(30,111,232,0.08);
+    }
+
+    .ig-top {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 12px;
+      border-bottom: 1px solid #F3F4F6;
+    }
+
+    .ig-ava {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 13px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .ig-name { font-size: 13px; font-weight: 700; }
+    .ig-loc { font-size: 11px; color: var(--muted); }
+    .ig-dots { margin-left: auto; color: var(--muted); font-size: 18px; cursor: pointer; }
+
+    .ig-img {
+      width: 100%;
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, #1E6FE8 0%, #0A1628 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ig-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .img-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      color: rgba(255,255,255,0.7);
+      font-size: 13px;
+    }
+
+    .ig-actions { padding: 8px 12px 2px; font-size: 20px; display: flex; gap: 12px; }
+
+    .ig-text {
+      padding: 2px 12px 10px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .ig-text strong { font-weight: 700; }
+    .ig-tags { padding: 0 12px 12px; font-size: 12px; color: var(--blue); line-height: 1.7; }
+
+    /* ── ACTION BUTTONS ── */
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .btn-action {
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-action:active { transform: scale(0.96); }
+
+    .btn-copy { background: var(--blue); color: #fff; }
+    .btn-copy.copied { background: var(--green); }
+    .btn-secondary { background: #F0F4FF; color: var(--blue); border: 1.5px solid var(--border); }
+
+    .btn-full { grid-column: 1 / -1; }
+
+    /* ── SPINNER ── */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .spinner-blue {
+      border-color: rgba(30,111,232,0.2);
+      border-top-color: var(--blue);
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── SETTINGS MODAL ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      display: none;
+      align-items: flex-end;
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+      background: var(--card);
+      border-radius: 20px 20px 0 0;
+      padding: 20px 16px 40px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      animation: slideUp 0.25s ease;
+    }
+
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+    .modal-handle {
+      width: 36px; height: 4px;
+      background: #D1D5DB;
+      border-radius: 2px;
+      margin: 0 auto 16px;
+    }
+
+    .modal-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    .btn-save {
+      width: 100%;
+      padding: 14px;
+      background: var(--blue);
+      color: #fff;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #111;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 200;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── HISTORY ── */
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .h-thumb {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      cursor: pointer;
+      background: var(--border);
+    }
+
+    .h-thumb:active { border-color: var(--blue); }
+    .h-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+    .empty-history {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      padding: 12px 0;
+    }
+
+    .gap-10 { gap: 10px; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="logo">STELIO<span>.</span></div>
+    <div class="header-sub">stelio.com.ua</div>
+  </div>
+  <div class="header-badge">📸 Instagram</div>
+</div>
+
+<!-- SETTINGS ROW -->
+<div class="section">
+  <div class="section-title">Аккаунт</div>
+  <div class="setup-card" style="cursor:default">
+    <div class="setup-icon">🔒</div>
+    <div class="setup-info">
+      <div class="setup-label">STELIO — приватный бот</div>
+      <div class="setup-value" id="accessStatus">Проверка доступа...</div>
+    </div>
+    <div class="setup-dot" id="keyDot"></div>
+  </div>
+</div>
+
+<!-- POST TYPE -->
+<div class="section" style="margin-top:16px">
+  <div class="section-title">Тип поста</div>
+  <div class="type-grid" id="typeGrid">
+    <div class="type-btn active" data-type="service" onclick="selectType(this)">
+      <div class="type-icon">🔧</div>
+      <div class="type-label">Услуга</div>
+    </div>
+    <div class="type-btn" data-type="overview" onclick="selectType(this)">
+      <div class="type-icon">📷</div>
+      <div class="type-label">Объект</div>
+    </div>
+    <div class="type-btn" data-type="promotion" onclick="selectType(this)">
+      <div class="type-icon">🎯</div>
+      <div class="type-label">Акция</div>
+    </div>
+    <div class="type-btn" data-type="review" onclick="selectType(this)">
+      <div class="type-icon">⭐</div>
+      <div class="type-label">Отзыв</div>
+    </div>
+    <div class="type-btn" data-type="team" onclick="selectType(this)">
+      <div class="type-icon">👷</div>
+      <div class="type-label">Команда</div>
+    </div>
+    <div class="type-btn" data-type="comparison" onclick="selectType(this)">
+      <div class="type-icon">↔️</div>
+      <div class="type-label">До/После</div>
+    </div>
+  </div>
+</div>
+
+<!-- DESCRIPTION -->
+<div class="section" style="margin-top:16px">
+  <div class="card">
+    <div class="input-group">
+      <label>Описание поста</label>
+      <textarea id="postDesc" placeholder="Напр: тканевый потолок со световыми линиями, студия звукозаписи, Дом Кино, Киев" rows="3"></textarea>
+    </div>
+
+    <div class="input-group" style="margin-bottom:0">
+      <label>Стиль изображения</label>
+      <select id="imgStyle">
+        <option value="professional interior photography, finished ceiling, bright clean room, 4K, no people, no text">📷 Интерьер (готовая работа)</option>
+        <option value="professional installation process, workers in STELIO uniform, ceiling work in progress">👷 Процесс монтажа</option>
+        <option value="close-up detail photo, ceiling texture, LED lights, premium finish, macro">🔍 Крупный план / детали</option>
+        <option value="modern apartment interior, beautiful ceiling with spotlights, blue accent lighting, luxury">✨ Премиум интерьер</option>
+        <option value="before and after split, ceiling renovation, dramatic improvement, comparison">↔️ До / После</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- ERROR -->
+<div class="section" style="margin-top:10px">
+  <div class="error-box" id="errorBox"></div>
+</div>
+
+<!-- GENERATE BUTTON -->
+<div class="section" style="margin-top:6px">
+  <button class="btn-generate" id="generateBtn" onclick="generate()">
+    🚀 ГЕНЕРИРОВАТЬ ПОСТ
+  </button>
+</div>
+
+<!-- RESULT -->
+<div class="result-section section" id="resultSection" style="margin-top:16px">
+  <div class="section-title">Результат</div>
+
+  <div class="ig-preview">
+    <div class="ig-top">
+      <div class="ig-ava">S</div>
+      <div>
+        <div class="ig-name">stelio.com.ua</div>
+        <div class="ig-loc" id="igLoc">Киев, Украина</div>
+      </div>
+      <div class="ig-dots">···</div>
+    </div>
+    <div class="ig-img" id="igImg">
+      <div class="img-placeholder">
+        <div class="spinner"></div>
+        <div>Генерирую изображение...</div>
+      </div>
+    </div>
+    <div class="ig-actions">❤️ 💬 ✈️</div>
+    <div class="ig-text">
+      <strong>stelio.com.ua</strong> <span id="igCaption"></span>
+    </div>
+    <div class="ig-tags" id="igTags"></div>
+  </div>
+
+  <div class="action-row">
+    <button class="btn-action btn-copy" id="btnCaption" onclick="copyText('caption')">📋 Подпись</button>
+    <button class="btn-action btn-copy" id="btnTags" onclick="copyText('tags')">📋 Хештеги</button>
+    <button class="btn-action btn-copy btn-full" id="btnAll" onclick="copyText('all')">📋 Скопировать всё</button>
+    <button class="btn-action btn-secondary" onclick="openImage()">🖼️ Открыть фото</button>
+    <button class="btn-action btn-secondary" onclick="generate()">🔄 Ещё вариант</button>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="section" style="margin-top:20px">
+  <div class="section-title">Последние посты</div>
+  <div class="card">
+    <div class="history-grid" id="historyGrid">
+      <div class="empty-history" style="grid-column:1/-1">Здесь появятся сгенерированные посты</div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal" onclick="closeSettingsOutside(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚙️ Настройки</div>
+
+    <div class="input-group">
+      <label>OpenRouter API ключ</label>
+      <input type="password" id="apiKeyInput" placeholder="sk-or-v1-..."/>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">
+        Получи ключ на <strong>openrouter.ai/keys</strong> (у тебя уже есть $10!)
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label>Модель для текста</label>
+      <select id="modelSelect">
+        <option value="openai/gpt-4o-mini">GPT-4o Mini ⭐ (~$0.0002/пост)</option>
+        <option value="openai/gpt-4o">GPT-4o 🏆 (~$0.003/пост)</option>
+        <option value="anthropic/claude-sonnet-4-5">Claude Sonnet 4.5 🎯 (~$0.004/пост)</option>
+        <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash 💨 (~$0.0005/пост)</option>
+        <option value="deepseek/deepseek-chat">DeepSeek V3 💰 (~$0.0003/пост)</option>
+      </select>
+    </div>
+
+    <div class="input-group">
+      <label>Язык подписи</label>
+      <select id="langSelect">
+        <option value="ukrainian">🇺🇦 Украинский</option>
+        <option value="russian">🇷🇺 Русский</option>
+        <option value="english">🇬🇧 Английский</option>
+      </select>
+    </div>
+
+    <div class="input-group" style="margin-bottom:16px">
+      <label>Город / регион</label>
+      <input type="text" id="cityInput" value="Киев и область" placeholder="Киев и область"/>
+    </div>
+
+    <button class="btn-save" onclick="saveSettings()">💾 Сохранить</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // Init Telegram Mini App
+  const tg = window.Telegram?.WebApp;
+  if (tg) {
+    tg.ready();
+    tg.expand();
+    tg.enableClosingConfirmation();
+  }
+
+  let selectedType = 'service';
+  let currentImageUrl = '';
+  let captionText = '';
+  let tagsText = '';
+
+  const typePrompts = {
+    service: 'professional ceiling installation service post for Instagram',
+    review: 'customer review / testimonial post about stretch ceiling installation',
+    overview: 'completed project showcase / overview of stretch ceiling installation',
+    promotion: 'special offer / promotion post for ceiling installation service',
+    team: 'team / company culture post for professional ceiling installers',
+    comparison: 'before and after ceiling renovation transformation post'
+  };
+
+  // ── CONFIG ──
+  const OWNER_ID = 220218956;
+  // API key is stored securely on the server (Railway env vars)
+  // Server URL — will be set after Railway deploy
+  const SERVER_URL = window.location.origin; // same origin since frontend is served by server
+
+  // ── INIT ──
+  window.onload = () => {
+    checkAccess();
+    loadHistory();
+  };
+
+  function checkAccess() {
+    const userId = tg?.initDataUnsafe?.user?.id;
+    const dot = document.getElementById('keyDot');
+    const status = document.getElementById('accessStatus');
+
+    if (!tg || !userId) {
+      // Opened in browser, not Telegram - allow for testing
+      status.textContent = 'Открыт в браузере (тест режим)';
+      dot.classList.add('active');
+      return;
+    }
+
+    if (Number(userId) === Number(OWNER_ID)) {
+      status.textContent = 'Добро пожаловать, Олег! ✅';
+      dot.classList.add('active');
+    } else {
+      status.textContent = '⛔ Нет доступа';
+      dot.style.background = '#EF4444';
+      document.getElementById('generateBtn').disabled = true;
+      document.getElementById('generateBtn').innerHTML = '⛔ Нет доступа';
+      showError('Этот бот приватный. Доступ только для владельца.');
+    }
+  }
+
+  function loadSettings() {}
+
+  function saveSettings() {
+    closeSettings();
+    showToast('✅ Сохранено');
+  }
+
+  // ── MODAL ──
+  function openSettings() {
+    document.getElementById('settingsModal').classList.add('show');
+  }
+
+  function closeSettings() {
+    document.getElementById('settingsModal').classList.remove('show');
+  }
+
+  function closeSettingsOutside(e) {
+    if (e.target === document.getElementById('settingsModal')) closeSettings();
+  }
+
+  // ── TYPE SELECT ──
+  function selectType(el) {
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    selectedType = el.dataset.type;
+
+    const hints = {
+      service: 'Напр: матовый белый потолок со споттами, спальня 18 кв.м',
+      overview: 'Напр: ЖК Осокор, 3-комнатная, тканевый потолок с LED подсветкой',
+      promotion: 'Напр: акция -20% на монтаж, бесплатный замер до конца месяца',
+      review: 'Напр: клиент оставил отзыв 5 звёзд, быстро, чисто, качественно',
+      team: 'Напр: команда Stelio на объекте, монтажники в форме',
+      comparison: 'Напр: старые плиты → натяжной потолок с LED, квартира в Киеве',
+    };
+    document.getElementById('postDesc').placeholder = hints[selectedType] || '';
+  }
+
+  // ── ERROR ──
+  function showError(msg) {
+    const el = document.getElementById('errorBox');
+    el.textContent = '⚠️ ' + msg;
+    el.classList.add('show');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  function hideError() { document.getElementById('errorBox').classList.remove('show'); }
+
+  // ── TOAST ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // ── GENERATE ──
+  async function generate() {
+    hideError();
+
+    // Check TG access
+    const userId = tg?.initDataUnsafe?.user?.id;
+    if (tg && userId && Number(userId) !== Number(OWNER_ID)) { showError('Нет доступа'); return; }
+
+    const desc = document.getElementById('postDesc').value.trim();
+    if (!desc) { showError('Опиши что показать в посте'); return; }
+
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Генерирую...';
+
+    document.getElementById('resultSection').classList.add('show');
+    document.getElementById('igImg').innerHTML = '<div class="img-placeholder"><div class="spinner"></div><div>Генерирую через DALL-E...</div></div>';
+    document.getElementById('igCaption').textContent = '';
+    document.getElementById('igTags').textContent = '';
+
+    const lang = 'ukrainian';
+    const imgStyle = document.getElementById('imgStyle').value;
+    const postType = typePrompts[selectedType];
+
+    const langMap = { ukrainian: 'Ukrainian', russian: 'Russian', english: 'English' };
+    const langName = langMap[lang] || 'Ukrainian';
+
+    try {
+      // ── TEXT ──
+      const prompt = `You are an Instagram content manager for STELIO — professional stretch ceiling installation company in ${city}, Ukraine.
+
+Post type: ${postType}
+Description: "${desc}"
+
+Write an engaging Instagram post in ${langName} language. Respond ONLY with valid JSON object, no markdown, no extra text:
+{"caption":"3-4 sentences, friendly tone, 1-2 emojis, end with call to action","hashtags":"25 relevant hashtags space-separated, mix local and English tags","image_prompt":"detailed English DALL-E 3 prompt, style: ${imgStyle}, square 1:1, photorealistic, NO text, NO watermarks, NO logos"}`;
+
+      const res = // Send to our Railway server (API key is safe there)
+      const res = await fetch(SERVER_URL + '/api/generate-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ desc, postType, imgStyle, lang, userId: String(OWNER_ID) })
+      });
+
+      const parsed = await res.json();
+      if (!res.ok || parsed.error) throw new Error(parsed.error || 'Ошибка сервера');
+      captionText = parsed.caption || '';
+      tagsText = parsed.hashtags || '';
+
+      document.getElementById('igCaption').textContent = captionText;
+      document.getElementById('igTags').textContent = tagsText;
+      document.getElementById('igLoc').textContent = city;
+
+      // ── IMAGE ──
+      const imgPrompt = parsed.image_prompt || `${desc}, ${imgStyle}`;
+
+      // Get image URL from server
+      const imgRes = await fetch(SERVER_URL + '/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imagePrompt: imgPrompt, userId: String(OWNER_ID) })
+      });
+      const imgData = await imgRes.json();
+      const imageUrl = imgData.imageUrl;
+
+      if (!imageUrl) throw new Error('Не удалось получить URL изображения');
+
+      currentImageUrl = imageUrl;
+      document.getElementById('igImg').innerHTML = `<img src="${imageUrl}" alt="post" onload="this.style.opacity=1" style="opacity:0;transition:opacity 0.5s" />`;
+      // Wait for image to load
+      setTimeout(() => {
+        saveHistory(imageUrl, captionText);
+        showToast('✅ Готово к публикации!');
+        if (tg) tg.HapticFeedback?.notificationOccurred('success');
+      }, 1000);
+
+    } catch (e) {
+      showError(e.message);
+      document.getElementById('igImg').innerHTML = '<div class="img-placeholder" style="padding:20px">❌ Ошибка генерации</div>';
+      if (tg) tg.HapticFeedback?.notificationOccurred('error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '🚀 ГЕНЕРИРОВАТЬ ПОСТ';
+    document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // ── COPY ──
+  function copyText(type) {
+    let text = '';
+    if (type === 'caption') text = captionText;
+    else if (type === 'tags') text = tagsText;
+    else text = captionText + '\n\n' + tagsText;
+
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('📋 Скопировано!');
+      if (tg) tg.HapticFeedback?.impactOccurred('light');
+    }).catch(() => {
+      // Fallback for older browsers
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('📋 Скопировано!');
+    });
+  }
+
+  function openImage() {
+    if (currentImageUrl) window.open(currentImageUrl, '_blank');
+    else showToast('⚠️ Сначала сгенерируй пост');
+  }
+
+  // ── HISTORY ──
+  function saveHistory(url, caption) {
+    const h = JSON.parse(localStorage.getItem('stelio_history') || '[]');
+    h.unshift({ url, caption, date: Date.now() });
+    if (h.length > 8) h.pop();
+    localStorage.setItem('stelio_history', JSON.stringify(h));
+    loadHistory();
+  }
+
+  function loadHistory() {
+    const h = JSON.parse(localStorage.getItem('stelio_history') || '[]');
+    const grid = document.getElementById('historyGrid');
+    if (!h.length) return;
+    grid.innerHTML = h.map(i => `
+      <div class="h-thumb" onclick="previewHistory('${i.url}')">
+        <img src="${i.url}" loading="lazy"/>
+      </div>`).join('');
+  }
+
+  function previewHistory(url) {
+    window.open(url, '_blank');
+  }
+</script>
+</body>
+</html>
