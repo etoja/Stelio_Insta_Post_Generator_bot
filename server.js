@@ -58,7 +58,7 @@ Post type: ${postType}
 Description: "${desc}"
 
 Write an engaging Instagram post in ${langName} language. Respond ONLY with valid JSON object, no markdown, no extra text:
-{"caption":"3-4 sentences, friendly tone, 1-2 emojis, end with call to action","hashtags":"25 relevant hashtags space-separated, mix local and English tags","image_prompt":"detailed English image generation prompt, style: ${imgStyle}, square 1:1, photorealistic, NO text, NO watermarks, NO logos"}`;
+{"caption":"3-4 sentences, friendly tone, 1-2 emojis, end with call to action","hashtags":"25 relevant hashtags space-separated, mix local and English tags","image_prompt":"detailed English image generation prompt, style: ${imgStyle}, square 1:1, photorealistic, brand accent color #197EF2 blue, dark navy background #0A1628, NO text, NO watermarks, NO logos"}`;
 
   try {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
