@@ -657,32 +657,34 @@
 
   // ── INIT ──
   window.onload = () => {
-    checkAccess();
     loadHistory();
+    // Check access after Telegram SDK fully loads
+    setTimeout(checkAccess, 500);
   };
 
   function checkAccess() {
-    const userId = tg?.initDataUnsafe?.user?.id;
     const dot = document.getElementById('keyDot');
     const status = document.getElementById('accessStatus');
 
-    if (!tg || !userId) {
-      // Opened in browser, not Telegram - allow for testing
-      status.textContent = 'Открыт в браузере (тест режим)';
-      dot.classList.add('active');
-      return;
-    }
+    // Try to get user from Telegram
+    const userId = tg?.initDataUnsafe?.user?.id;
 
-    if (Number(userId) === Number(OWNER_ID)) {
-      status.textContent = 'Добро пожаловать, Олег! ✅';
-      dot.classList.add('active');
-    } else {
+    if (userId && Number(userId) !== Number(OWNER_ID)) {
+      // Someone else's Telegram account
       status.textContent = '⛔ Нет доступа';
       dot.style.background = '#EF4444';
       document.getElementById('generateBtn').disabled = true;
       document.getElementById('generateBtn').innerHTML = '⛔ Нет доступа';
-      showError('Этот бот приватный. Доступ только для владельца.');
+      return;
     }
+
+    // Either our user or browser/unknown - allow access
+    if (userId && Number(userId) === Number(OWNER_ID)) {
+      status.textContent = 'Добро пожаловать, Олег! ✅';
+    } else {
+      status.textContent = 'STELIO Bot ✅';
+    }
+    dot.classList.add('active');
   }
 
   function loadSettings() {}
