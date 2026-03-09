@@ -135,14 +135,14 @@
 <div class="section" style="margin-top:16px">
   <div class="section-title">Фото</div>
   <div class="card">
-    <!-- hidden file input -->
-    <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)"/>
-    <!-- upload tap zone (shown when no photo) -->
-    <div class="photo-upload" id="photoUploadZone" onclick="document.getElementById('photoInput').click()">
+    <!-- file input triggered by label (works on iOS/Android in Telegram) -->
+    <input type="file" id="photoInput" accept="image/*" style="position:absolute;left:-9999px;opacity:0;width:1px;height:1px" onchange="handlePhotoUpload(event)"/>
+    <!-- upload tap zone — label directly triggers input -->
+    <label for="photoInput" class="photo-upload" id="photoUploadZone" style="display:block;cursor:pointer">
       <div class="photo-upload-icon">📸</div>
       <div class="photo-upload-text">Натисни та завантаж фото</div>
       <div class="photo-upload-sub">Геометрія Stelio накладеться зверху</div>
-    </div>
+    </label>
     <!-- preview (shown after upload) -->
     <img id="photoPreview" class="photo-preview" alt="preview"/>
     <div class="photo-change" id="photoChange" style="display:none" onclick="resetPhoto()">✕ Видалити фото</div>
@@ -228,6 +228,7 @@
   var captionText = '';
   var tagsText = '';
   var currentImageUrl = '';
+  window.uploadedPhotoDataUrl = null;
   var uploadedPhotoDataUrl = null;
 
   var typePrompts = {
@@ -266,6 +267,8 @@
     var reader = new FileReader();
     reader.onload = function(ev) {
       uploadedPhotoDataUrl = ev.target.result;
+      window.uploadedPhotoDataUrl = ev.target.result;
+      console.log('PHOTO LOADED, size:', ev.target.result.length);
       var preview = document.getElementById('photoPreview');
       preview.src = uploadedPhotoDataUrl;
       preview.classList.add('show');
@@ -277,10 +280,12 @@
 
   function resetPhoto() {
     uploadedPhotoDataUrl = null;
+    window.uploadedPhotoDataUrl = null;
     var preview = document.getElementById('photoPreview');
     preview.classList.remove('show');
     preview.src = '';
     document.getElementById('photoUploadZone').style.display = 'block';
+    document.getElementById('photoUploadZone').style.removeProperty && document.getElementById('photoUploadZone').style.removeProperty('display');
     document.getElementById('photoChange').style.display = 'none';
     document.getElementById('photoInput').value = '';
   }
@@ -499,7 +504,9 @@
         resolve(canvas.toDataURL('image/jpeg', 0.93));
       }
 
-      if (uploadedPhotoDataUrl) {
+      var photoData = uploadedPhotoDataUrl || window.uploadedPhotoDataUrl;
+      console.log("buildStelioImage photoData:", photoData ? photoData.length : "NONE");
+      if (photoData) {
         var img = new Image();
         img.onload = function() {
           // Фото в верхние 65%
@@ -509,7 +516,7 @@
           ctx.drawImage(img, (1080-w)/2, 0, w, Math.min(h, targetH));
           drawDesign();
         };
-        img.src = uploadedPhotoDataUrl;
+        img.src = photoData;
       } else {
         drawDesign();
       }
